@@ -26,7 +26,8 @@ from sound_keyboard.sound.sound import (
 
 # constants
 BACKGROUND_COLOR = (242, 242, 242)
-KEYTILE_COLOR = (242, 242, 242)
+# KEYTILE_COLOR = (242, 242, 242)
+KEYTILE_COLOR = (0, 255, 0)
 OVERLAY_COLOR = (0, 0, 0, 180)
 FONT_COLOR = (12, 9, 10)
 MAX_DELAY = 0.5
@@ -75,8 +76,9 @@ class Keyboard:
 
         base = width // 2
 
-        cell_sizes = [70, 40, 30]
-        font_sizes = [70, 40, 30]
+        # 真ん中、真ん中の隣、両端のサイズ
+        cell_sizes = [70, 30, 10]
+        font_sizes = [70, 30, 10]
         distances = [0, base // 2, base * 4 // 5]
 
         
@@ -142,12 +144,14 @@ class Keyboard:
         base = width // 2
 
         cell_sizes = [70, 40, 30]
-        font_sizes = [60, 30, 20]
+        font_sizes = [50, 20, 10]
         distances = [0, base // 2, base * 4 // 5]
 
         center_index = keymap.index(self.keyboard_state_controller.current_child_char)
 
-        for dir in range(-2, 3):
+        # 描画順を変えてみる
+        # for dir in range(-2, 3):
+        for dir in [-2, 2, -1, 1, 0]:
             index = center_index + dir
             cell_size = cell_sizes[abs(dir)]
             font_size = font_sizes[abs(dir)]
@@ -202,12 +206,39 @@ class Keyboard:
             )
             """
 
+        kind = self.keyboard_state_controller.kind
+        keymap = KEYMAP[kind]['children'][self.keyboard_state_controller.current_parent_char]
+        center_index = keymap.index(self.keyboard_state_controller.current_child_char)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()    
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    sys.exit()
+                if event.key == pygame.K_SPACE:
+                    print(self.keyboard_state_controller.selected_parent, keymap[center_index])
+                    if not (self.keyboard_state_controller.selected_parent and keymap[center_index] == "定"):
+                        self.keyboard_state_controller.select()
+                if event.key == pygame.K_BACKSPACE:
+                    self.keyboard_state_controller.back()
+                if event.key == pygame.K_RETURN:
+                    if self.keyboard_state_controller.text != "":
+                        # read_aloud(self.keyboard_state_controller.text)
+                        self.keyboard_state_controller.clear()
+                    self.keyboard_state_controller.clear()
+                if event.key == pygame.K_LEFT:
+                    self.keyboard_state_controller.move(Direction.LEFT)
+                if event.key == pygame.K_RIGHT:
+                    self.keyboard_state_controller.move(Direction.RIGHT)
+                if event.key == pygame.K_UP:
+                    self.keyboard_state_controller.move(Direction.UP)
+                if event.key == pygame.K_DOWN:
+                    self.keyboard_state_controller.move(Direction.DOWN)
             
-        #TODO(hakomori64) remove it 
+        """#TODO(hakomori64) remove it 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
             self.keyboard_state_controller.move(Direction.LEFT)
@@ -232,7 +263,7 @@ class Keyboard:
             #gestures.mouth_state = MouthState.OPEN
         if keys[pygame.K_ESCAPE]:
             pygame.quit()
-            sys.exit()
+            sys.exit()"""
         
         state_updated = False
         #if self.delay <= 0:
