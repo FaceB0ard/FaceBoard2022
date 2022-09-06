@@ -1,5 +1,5 @@
-# open_hack2021
-OpenHackU 2021 develop repository
+# 技育展2022
+Geek-Ten develop repository
 
 ### 環境
 
