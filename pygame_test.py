@@ -17,6 +17,10 @@ from sound_keyboard.sound.sound import (
     read_aloud
 )
 
+from sound_keyboard.keyboard.add_template import (
+    add_template
+)
+
 #from sound_keyboard.face_gesture_detector.face_gesture_detector import (
 #    EyeDirection,
 #    EyeState,
@@ -26,8 +30,8 @@ from sound_keyboard.sound.sound import (
 
 # constants
 BACKGROUND_COLOR = (242, 242, 242)
-# KEYTILE_COLOR = (242, 242, 242)
-KEYTILE_COLOR = (0, 255, 0)
+KEYTILE_COLOR = (242, 242, 242)
+# KEYTILE_COLOR = (255, 255, 255)
 OVERLAY_COLOR = (0, 0, 0, 180)
 FONT_COLOR = (12, 9, 10)
 MAX_DELAY = 0.5
@@ -40,7 +44,7 @@ class Keyboard:
         self.queue = queue
         # initialize app
         pygame.init()
-        pygame.display.set_caption('Faceboard')
+        pygame.display.set_caption('FaceBoard')
 
         # setting initial window size and set window resizable
         self.surface = pygame.display.set_mode((500, 500), pygame.RESIZABLE)
@@ -53,6 +57,8 @@ class Keyboard:
         # state
         self.previous_gestures = None
         self.delay = 0
+
+        self.add_template_time = None
     
     def draw_text(self, char_info):
         char, pos, size = char_info
@@ -149,6 +155,9 @@ class Keyboard:
 
         center_index = keymap.index(self.keyboard_state_controller.current_child_char)
 
+        # draw currently selected text
+        self.draw_text((self.keyboard_state_controller.text, (width / 2, height * 7 // 8), 20))
+
         # 描画順を変えてみる
         # for dir in range(-2, 3):
         for dir in [-2, 2, -1, 1, 0]:
@@ -160,14 +169,26 @@ class Keyboard:
             sign = 1 if dir > 0 else -1
 
             if 0 <= index < len(keymap):
-                self.draw_tile(
-                    keymap[index] if abs(dir) != 2 else '...',
-                    (width // 2 +  sign * distance, height // 3),
-                    cell_size,
-                    KEYTILE_COLOR,
-                    0,
-                    font_size
-                )
+                # 中央のみ表示をずらす
+                if dir == 0:
+                    self.draw_tile(
+                        keymap[index],
+                        (width // 2, height // 2),
+                        cell_size,
+                        KEYTILE_COLOR,
+                        0,
+                        font_size
+                    )
+                else:
+                    self.draw_tile(
+                        keymap[index] if abs(dir) != 2 else '...',
+                        (width // 2 +  sign * distance, height // 3),
+                        cell_size,
+                        KEYTILE_COLOR,
+                        0,
+                        font_size
+                    )
+        
         
 
     def draw(self):
@@ -179,12 +200,15 @@ class Keyboard:
             self.draw_child_keyboard()
         else:
             self.draw_keyboard()
-            
+        
+        if self.add_template_time is not None and time.time() - self.add_template_time < 3:
+            self.draw_text(('追加しました。再起動して反映します。', (self.surface.get_width() // 2, self.surface.get_height() // 8), 20))
         
         pygame.display.update()
     
     def update(self):
 
+        start_time = time.time()
         #gestures: Gestures = None
         while False:# not self.queue.empty():
             g, enqueued_at = self.queue.get()
@@ -219,16 +243,21 @@ class Keyboard:
                     pygame.quit()
                     sys.exit()
                 if event.key == pygame.K_SPACE:
-                    print(self.keyboard_state_controller.selected_parent, keymap[center_index])
+                    # print(self.keyboard_state_controller.selected_parent, keymap[center_index])
                     if not (self.keyboard_state_controller.selected_parent and keymap[center_index] == "定"):
                         self.keyboard_state_controller.select()
                 if event.key == pygame.K_BACKSPACE:
                     self.keyboard_state_controller.back()
                 if event.key == pygame.K_RETURN:
                     if self.keyboard_state_controller.text != "":
-                        # read_aloud(self.keyboard_state_controller.text)
+                        read_aloud(self.keyboard_state_controller.text)
                         self.keyboard_state_controller.clear()
                     self.keyboard_state_controller.clear()
+                if event.key == pygame.K_a:
+                    if self.keyboard_state_controller.text != "" and not self.keyboard_state_controller.selected_parent:
+                        self.add_template_time = time.time()
+                        add_template(self.keyboard_state_controller.text)
+                        self.keyboard_state_controller.clear()
                 if event.key == pygame.K_LEFT:
                     self.keyboard_state_controller.move(Direction.LEFT)
                 if event.key == pygame.K_RIGHT:
