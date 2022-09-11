@@ -1,5 +1,4 @@
 from enum import Enum
-from readline import insert_text
 from sound_keyboard.keyboard.utils.jp_char_util import (
     add_jp_char
 )
@@ -37,7 +36,7 @@ JP_CHILDREN_KEY_MAP = {
     'わ': ['わ', 'を', 'ん', 'ー', '〜'],
     '、': ['、', '。', '？', '！', '…'],
 }
-with open('template.txt', mode="r") as f:
+with open('template.txt', mode="r", encoding="utf-8") as f:
     line = f.readlines()
 
 text = []
