@@ -2,7 +2,7 @@ from sound_keyboard.keyboard.state_controller import (
     Direction
 )
 
-from sound_keyboard.face_gesture_detector.face_gesture_detector import (
+from sound_keyboard.face_gesture_detector.enums import (
     EyeDirection
 )
 

@@ -1,6 +1,6 @@
 from threading import Thread
 
-from sound_keyboard.keyboard.keyboard import Keyboard
+from gesture_reciever_test import Keyboard
 from gesture_sender import Gesture_sender
 from sound_keyboard.queue import (
     get_queue

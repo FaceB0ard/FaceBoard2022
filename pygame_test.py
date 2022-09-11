@@ -21,12 +21,12 @@ from sound_keyboard.keyboard.add_template import (
     add_template
 )
 
-#from sound_keyboard.face_gesture_detector.face_gesture_detector import (
-#    EyeDirection,
-#    EyeState,
-#    MouthState,
-#    Gestures
-#)
+from sound_keyboard.face_gesture_detector.enums import (
+    EyeDirection,
+    EyeState,
+    MouthState,
+    Gestures
+)
 
 # constants
 BACKGROUND_COLOR = (242, 242, 242)

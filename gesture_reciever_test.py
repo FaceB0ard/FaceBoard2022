@@ -1,10 +1,9 @@
 import pygame
 import sys
-import cv2
 import time
-#from utils import (
-#    convert_eye_direction_to_direction
-#)
+from utils import (
+    convert_eye_direction_to_direction
+)
 from sound_keyboard.queue import (
     get_queue
 )
@@ -21,12 +20,12 @@ from sound_keyboard.keyboard.add_template import (
     add_template
 )
 
-#from sound_keyboard.face_gesture_detector.face_gesture_detector import (
-#    EyeDirection,
-#    EyeState,
-#    MouthState,
-#    Gestures
-#)
+from sound_keyboard.face_gesture_detector.enums import (
+    EyeDirection,
+    EyeState,
+    MouthState,
+    Gestures
+)
 
 # constants
 BACKGROUND_COLOR = (242, 242, 242)
@@ -51,8 +50,6 @@ class Keyboard:
 
         # setting keyboard controller
         self.keyboard_state_controller = KeyboardStateController()
-
-        self.cap = cv2.VideoCapture(0)
 
         # state
         self.previous_gestures = None
@@ -113,12 +110,12 @@ class Keyboard:
         # draw currently selected text
         self.draw_text((self.keyboard_state_controller.text, (width / 2, height * 7 // 8), 20))
 
-    """def updateKeyboardState(self, gestures: Gestures):
+    def updateKeyboardState(self, gestures: Gestures):
 
         # Gesturesオブジェクトの状態を読み出して操作を確定する
 
         if  gestures.eye_direction != EyeDirection.CENTER:
-            direction = None #convert_eye_direction_to_direction(# gestures.eye_direction)
+            direction = convert_eye_direction_to_direction(gestures.eye_direction)
             self.keyboard_state_controller.move(direction)
             return True
         
@@ -138,7 +135,7 @@ class Keyboard:
             self.keyboard_state_controller.clear()
             return True
         
-        return False"""
+        return False
     
     def draw_child_keyboard(self):
 
@@ -209,27 +206,24 @@ class Keyboard:
     def update(self):
 
         start_time = time.time()
-        #gestures: Gestures = None
-        while False:# not self.queue.empty():
+        gestures: Gestures = None
+        while not self.queue.empty():
             g, enqueued_at = self.queue.get()
             now = time.time()
-            # print('received gestures enqueued at: ', enqueued_at, 'now: ', now)
+            print('received gestures enqueued at: ', enqueued_at, 'now: ', now)
             if now - enqueued_at <= 0.3:
                 gestures = g
                 break
 
-        #if gestures is None:
-            # イベントがなにも届いていないので更新処理もしない
-            return
-            """
+        if gestures is not None:
+            # イベントがあったらキーボードの状態を更新する
             gestures = Gestures(
                 eye_direction = EyeDirection.CENTER,
                 left_eye_state = EyeState.OPEN,
                 right_eye_state = EyeState.OPEN,
                 mouth_state = MouthState.CLOSE,
             )
-            """
-
+            
         kind = self.keyboard_state_controller.kind
         keymap = KEYMAP[kind]['children'][self.keyboard_state_controller.current_parent_char]
         center_index = keymap.index(self.keyboard_state_controller.current_child_char)
@@ -293,19 +287,19 @@ class Keyboard:
         if keys[pygame.K_ESCAPE]:
             pygame.quit()
             sys.exit()"""
+        if gestures is None:
+            # イベントがなかったら更新処理をしない
+            return 
         
         state_updated = False
-        #if self.delay <= 0:
-        #    state_updated = self.updateKeyboardState(gestures)
-        
-        #self.previous_gestures = gestures
+        if self.delay <= 0:
+            state_updated = self.updateKeyboardState(gestures)
+        self.previous_gestures = gestures
         
         return state_updated
         
     def run(self):
-
         while True:
-            
             start = time.time()
 
             self.draw()
