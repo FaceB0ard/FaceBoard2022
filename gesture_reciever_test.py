@@ -1,6 +1,7 @@
 import pygame
 import sys
 import time
+from datetime import datetime
 from utils import (
     convert_eye_direction_to_direction
 )
@@ -113,10 +114,11 @@ class Keyboard:
     def updateKeyboardState(self, gestures: Gestures):
 
         # Gesturesオブジェクトの状態を読み出して操作を確定する
-
+        print(gestures.eye_direction)
         if  gestures.eye_direction != EyeDirection.CENTER:
             direction = convert_eye_direction_to_direction(gestures.eye_direction)
             self.keyboard_state_controller.move(direction)
+            print(f"move {direction}")
             return True
         
         if (self.previous_gestures is None or self.previous_gestures.left_eye_state == EyeState.OPEN) and gestures.left_eye_state == EyeState.CLOSE:
@@ -210,19 +212,20 @@ class Keyboard:
         while not self.queue.empty():
             g, enqueued_at = self.queue.get()
             now = time.time()
-            print('received gestures enqueued at: ', enqueued_at, 'now: ', now)
+            print(f'received gestures enqueued at: {datetime.fromtimestamp(enqueued_at)}, now: {datetime.fromtimestamp(now)}')
             if now - enqueued_at <= 0.3:
                 gestures = g
                 break
 
         if gestures is not None:
+            pass
             # イベントがあったらキーボードの状態を更新する
-            gestures = Gestures(
+            """gestures = Gestures(
                 eye_direction = EyeDirection.CENTER,
                 left_eye_state = EyeState.OPEN,
                 right_eye_state = EyeState.OPEN,
                 mouth_state = MouthState.CLOSE,
-            )
+            )"""
             
         kind = self.keyboard_state_controller.kind
         keymap = KEYMAP[kind]['children'][self.keyboard_state_controller.current_parent_char]
