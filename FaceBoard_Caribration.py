@@ -61,7 +61,9 @@ def main():
     cam_w, cam_h = get_opencv_img_res(opencv_image)
     width, height = pag.size()
     screen = pygame.display.set_mode((width, height))
-    cam_ratio = width * 0.4 / cam_w
+    cam_ratio = height * 0.4 / cam_h
+    cam_view_size_w = int(cam_w * cam_ratio)
+    cam_view_size_h = int(cam_h * cam_ratio)
 
     right_ratio = []
     left_ratio = []
@@ -83,7 +85,7 @@ def main():
         pygame_image = pygame.transform.flip(pygame_image, True, False)
 
         # 画像を縮小
-        pygame_image = pygame.transform.scale(pygame_image, (int(cam_w * cam_ratio), int(cam_h * cam_ratio)))
+        pygame_image = pygame.transform.scale(pygame_image, (cam_view_size_w, cam_view_size_h))
 
         # 背景色を白にする
         screen.fill((255, 255, 255))
@@ -103,8 +105,9 @@ def main():
 
         # step0(顔の認証を行う)
         if step == 0:
+            if not start_time: start_time = time.time()
             text = font.render('セットアップを始めます', True, (0, 0, 0))
-            pygame.draw.ellipse(screen, (255), (width // 2 - 100, 80, 200, 200), 5)
+            pygame.draw.ellipse(screen, (255), (width // 2 - cam_view_size_h * 0.3, cam_view_size_h * 0.2 ,cam_view_size_h *0.6, cam_view_size_h * 0.6), 5)
             screen.blit(text, (width // 2 - text.get_width() // 2, height // 2 - text.get_height() // 2))
             text = font.render('顔を円の中に入れ、正面を向いたまま、目線のみ動かしてください', True, (0, 0, 0))
             screen.blit(text, (width // 2 - text.get_width() // 2, height // 2 - text.get_height() // 2 + 50))
@@ -117,7 +120,7 @@ def main():
             else:
                 pupil_located = 0
             print(pupil_located)
-            if pupil_located >= 30:
+            if pupil_located >= 30 and time.time() - start_time >= 8:
                 step += 1
                 start_time = 0
 
