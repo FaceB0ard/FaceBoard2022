@@ -24,7 +24,7 @@ class GazeTracking(object):
 
         # _predictor is used to get facial landmarks of a given face
         cwd = os.path.abspath(os.path.dirname(__file__))
-        model_path = os.path.abspath(os.path.join(cwd, "trained_models/shape_predictor_68_face_landmarks.dat"))
+        model_path = os.path.abspath(os.path.join(cwd, "./trained_models/shape_predictor_68_face_landmarks.dat"))
         self._predictor = dlib.shape_predictor(model_path)
 
     @property
@@ -95,6 +95,10 @@ class GazeTracking(object):
             pupil_left = self.eye_left.pupil.y / (self.eye_left.center[1] * 2 - 10)
             pupil_right = self.eye_right.pupil.y / (self.eye_right.center[1] * 2 - 10)
             return (pupil_left + pupil_right) / 2
+    
+    def blinking_ratio(self):
+        if self.pupils_located:
+            return (self.eye_left.blinking + self.eye_right.blinking) / 2
 
     def is_right(self):
         """Returns true if the user is looking to the right"""
@@ -114,8 +118,7 @@ class GazeTracking(object):
     def is_blinking(self):
         """Returns true if the user closes his eyes"""
         if self.pupils_located:
-            blinking_ratio = (self.eye_left.blinking + self.eye_right.blinking) / 2
-            return blinking_ratio > 3.8
+            return self.blinking_ratio() > 5.5
 
     def annotated_frame(self):
         """Returns the main frame with pupils highlighted"""
