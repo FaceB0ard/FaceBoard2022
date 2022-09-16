@@ -3,6 +3,7 @@ import os
 import cv2
 import dlib
 from .eye import Eye
+from .eyelids import Eyelids
 from .mouth import Mouth
 from .calibration import Calibration
 import csv
@@ -37,6 +38,8 @@ class GazeTracking(object):
         self.frame = None
         self.eye_left = None
         self.eye_right = None
+        self.eyelids_left = None
+        self.eyelids_right = None
         self.mouth = None
         self.calibration = Calibration()
 
@@ -56,6 +59,18 @@ class GazeTracking(object):
             int(self.eye_left.pupil.y)
             int(self.eye_right.pupil.x)
             int(self.eye_right.pupil.y)
+            return True
+        except Exception:
+            return False
+    
+    @property
+    def eyelids_located(self):
+        """Check that the pupils have been located"""
+        try:
+            int(self.eyelids_left.width)
+            int(self.eyelids_left.height)
+            int(self.eyelids_right.width)
+            int(self.eyelids_right.height)
             return True
         except Exception:
             return False
@@ -82,6 +97,14 @@ class GazeTracking(object):
         except IndexError:
             self.eye_left = None
             self.eye_right = None
+        
+        try:
+            landmarks = self._predictor(frame, faces[0])
+            self.eyelids_left = Eyelids(landmarks, 0)
+            self.eyelids_right = Eyelids(landmarks, 1)
+        except:
+            self.eyelids_left = None
+            self.eyelids_right = None
 
         try:
             landmarks = self._predictor(frame, faces[0])
@@ -132,10 +155,6 @@ class GazeTracking(object):
             pupil_right = self.eye_right.pupil.y / (self.eye_right.center[1] * 2 - 10)
             return (pupil_left + pupil_right) / 2
 
-    def blinking_ratio(self):
-        if self.pupils_located:
-            return (self.eye_left.blinking + self.eye_right.blinking) / 2
-
     def is_right(self):
         """Returns true if the user is looking to the right"""
         if self.pupils_located:
@@ -151,9 +170,13 @@ class GazeTracking(object):
         if self.pupils_located:
             return self.is_right() is not True and self.is_left() is not True
 
+    def blinking_ratio(self):
+        if self.eyelids_located:
+            return (self.eye_left.blinking + self.eye_right.blinking) / 2
+
     def is_blinking(self):
         """Returns true if the user closes his eyes"""
-        if self.pupils_located:
+        if self.eyelids_located:
             return self.blinking_ratio() > blinking_threshold
         else:
             print("pupils not located")
