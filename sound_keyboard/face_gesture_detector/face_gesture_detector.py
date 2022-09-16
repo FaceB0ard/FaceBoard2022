@@ -230,7 +230,7 @@ class FaceGestureDetector:
                     left_y = landmarks.part(46).y
                     if gestures.eye_direction == EyeDirection.RIGHT:
                         text = "->"
-                    elif gestures.eye_direction == EyeDirection.RIGHT:
+                    elif gestures.eye_direction == EyeDirection.LEFT:
                         text = "<-"
                     else:
                         text = "o"
