@@ -140,11 +140,9 @@ def main():
             screen.blit(text, (width // 2 - text.get_width() // 2, height // 2 - text.get_height() // 2))
             text = font.render('Step 1/3', True, (0, 0, 0))
             screen.blit(text, (width // 2 - text.get_width() // 2, height // 2 - text.get_height() // 2 + 50))
-            # pygame.draw.circle(screen, (0, 0, 0), (width * 0.1, height // 2), 10)
             # 4秒カウントダウンする
             if time.time() - start_time < 4:
                 text = font.render(str(4 - int(time.time() - start_time)), True, (0, 0, 0))
-                # screen.blit(text, (width // 2 - text.get_width() // 2, height // 2 + 30)) #カウントダウンを中央に表示
                 screen.blit(text, (width, height // 2 + 100))
             else:
                 step += 1
