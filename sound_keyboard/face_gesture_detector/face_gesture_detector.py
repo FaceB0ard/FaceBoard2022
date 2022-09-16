@@ -203,7 +203,7 @@ class FaceGestureDetector:
             if self.gaze.is_blinking():
                 left_eye_state = EyeState.CLOSE
                 right_eye_state = EyeState.CLOSE
-            else:
+            elif not self.gaze.is_blinking():
                 left_eye_state = EyeState.OPEN
                 right_eye_state = EyeState.OPEN
 
