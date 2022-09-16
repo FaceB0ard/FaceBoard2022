@@ -34,7 +34,7 @@ KEYTILE_COLOR = (242, 242, 242)
 # KEYTILE_COLOR = (255, 255, 255)
 OVERLAY_COLOR = (0, 0, 0, 180)
 FONT_COLOR = (12, 9, 10)
-MAX_DELAY = 0.5
+MAX_DELAY = 0.7
 
 FONT_PATH = 'fonts/Noto_Sans_JP/NotoSansJP-Regular.otf'
 
@@ -47,7 +47,7 @@ class Keyboard:
         pygame.display.set_caption('FaceBoard')
 
         # setting initial window size and set window resizable
-        self.surface = pygame.display.set_mode((500, 500), pygame.RESIZABLE)
+        self.surface = pygame.display.set_mode((1000, 800), pygame.RESIZABLE)
 
         # setting keyboard controller
         self.keyboard_state_controller = KeyboardStateController()
@@ -55,8 +55,11 @@ class Keyboard:
         # state
         self.previous_gestures = None
         self.delay = 0
+        self.detect_eye_status = None
 
         self.add_template_time = None
+        self.move_to_left = None
+        self.move_to_right = None
     
     def draw_text(self, char_info):
         char, pos, size = char_info
@@ -81,11 +84,11 @@ class Keyboard:
         base = width // 2
 
         # 真ん中、真ん中の隣、両端のサイズ
-        cell_sizes = [70, 30, 10]
-        font_sizes = [70, 30, 10]
+        cell_sizes = [100, 50, 20]
+        font_sizes = [100, 50, 20]
         distances = [0, base // 2, base * 4 // 5]
 
-        
+
         padding = 5
 
         center_index = keymap.index(self.keyboard_state_controller.current_parent_char)
@@ -100,7 +103,7 @@ class Keyboard:
 
             if 0 <= index < len(keymap):
                 self.draw_tile(
-                    keymap[index] if abs(dir) != 2 else '...',
+                    keymap[index],# if abs(dir) != 2 else '...',
                     (width // 2 +  sign * distance, height // 2),
                     cell_size,
                     KEYTILE_COLOR,
@@ -108,28 +111,58 @@ class Keyboard:
                     font_size
                 )
         
-        # draw currently selected text
-        self.draw_text((self.keyboard_state_controller.text, (width / 2, height * 7 // 8), 20))
+        # draw currently selected text 決定された文字の表示
+        # 中央上部に表示
+        self.draw_text((self.keyboard_state_controller.text, (width / 2, height * 7 // 8), 30))
+        
+        for i, text in enumerate(keymap):
+            if keymap[i] == keymap[center_index]:
+                # self.draw_text((text, (i*30 + 80, height // 8 - 20), 30))
+                self.draw_text((text, (self.surface.get_width() // 2 - len(keymap) // 2 * 30 + i*30 + 10, height // 8 - 20), 30))
+            else:
+                text = pygame.font.Font(FONT_PATH, 20).render(f'{text}', True, (127, 127, 127))
+                # self.surface.blit(text, (i*30 + 70, height // 8 - 30))
+                self.surface.blit(text, (self.surface.get_width() // 2 - len(keymap) // 2 * 30 + i*30, height // 8 - 30))
 
     def updateKeyboardState(self, gestures: Gestures):
 
         # Gesturesオブジェクトの状態を読み出して操作を確定する
-        print(gestures.eye_direction)
+
         if  gestures.eye_direction != EyeDirection.CENTER:
             direction = convert_eye_direction_to_direction(gestures.eye_direction)
             self.keyboard_state_controller.move(direction)
-            print(f"move {direction}")
+            if direction == Direction.LEFT:
+                self.move_to_left = time.time()
+            elif direction == Direction.RIGHT:
+                self.move_to_right = time.time()
             return True
         
-        if (self.previous_gestures is None or self.previous_gestures.left_eye_state == EyeState.OPEN) and gestures.left_eye_state == EyeState.CLOSE:
-            # back
-            self.keyboard_state_controller.back()
-            return True
-        
-        if (self.previous_gestures is None or self.previous_gestures.right_eye_state == EyeState.OPEN) and gestures.right_eye_state == EyeState.CLOSE:
-            # select
-            self.keyboard_state_controller.select()
-            return True
+        # 正面で目を閉じたとき
+        if (self.previous_gestures is None or self.previous_gestures.right_eye_state == EyeState.OPEN) and gestures.right_eye_state == EyeState.CLOSE and gestures.eye_direction == EyeDirection.CENTER:
+            # まばたき判断システム
+            self.detect_eye_status = []
+            self.detect_eye_status.append(time.time())
+            print('close eye')
+
+        # 目を開けたとき
+        if self.detect_eye_status is not None and self.previous_gestures.right_eye_state == EyeState.CLOSE and gestures.right_eye_state == EyeState.OPEN:
+            self.detect_eye_status.append(time.time())
+            print(f'open eye, diff: {self.detect_eye_status[1] - self.detect_eye_status[0]}')
+
+            if len(self.detect_eye_status) == 2:
+                if 0.2 < (self.detect_eye_status[1] - self.detect_eye_status[0]) < 1.0:
+                    # 定を入力できないようにする
+                    kind = self.keyboard_state_controller.kind
+                    keymap = KEYMAP[kind]['children'][self.keyboard_state_controller.current_parent_char]
+                    center_index = keymap.index(self.keyboard_state_controller.current_child_char)
+                    if not (self.keyboard_state_controller.selected_parent and keymap[center_index] == "定"):
+                        self.keyboard_state_controller.select()
+                        self.detect_eye_status = None
+                        return True
+                elif 1.0 <= (self.detect_eye_status[1] - self.detect_eye_status[0]) < 5.0:
+                    self.keyboard_state_controller.back()
+                else:
+                    self.detect_eye_status = None
         
         if (self.previous_gestures is None or self.previous_gestures.mouth_state == MouthState.CLOSE) and gestures.mouth_state == MouthState.OPEN:
             if self.keyboard_state_controller.text != "":
@@ -148,14 +181,14 @@ class Keyboard:
 
         base = width // 2
 
-        cell_sizes = [70, 40, 30]
-        font_sizes = [50, 20, 10]
+        cell_sizes = [100, 50, 20]
+        font_sizes = [100, 50, 20]
         distances = [0, base // 2, base * 4 // 5]
 
         center_index = keymap.index(self.keyboard_state_controller.current_child_char)
 
         # draw currently selected text
-        self.draw_text((self.keyboard_state_controller.text, (width / 2, height * 7 // 8), 20))
+        self.draw_text((self.keyboard_state_controller.text, (width / 2, height * 7 // 8), 30))
 
         # 描画順を変えてみる
         # for dir in range(-2, 3):
@@ -180,15 +213,44 @@ class Keyboard:
                     )
                 else:
                     self.draw_tile(
-                        keymap[index] if abs(dir) != 2 else '...',
+                        keymap[index], # if abs(dir) != 2 else '...',
                         (width // 2 +  sign * distance, height // 3),
                         cell_size,
                         KEYTILE_COLOR,
                         0,
                         font_size
                     )
-        
-        
+    
+    def draw_camera_status(self):
+        # queueの中身がからでなければ、右上に緑丸を表示する
+        if self.previous_gestures is not None:
+            pygame.draw.circle(self.surface, (0, 220, 84), (self.surface.get_width() - 15, 15), 8, 0)
+    
+    def draw_triangle_gaze(self):
+        if self.move_to_left:
+            if time.time() - self.move_to_left > 0.1:
+                text = pygame.font.Font(FONT_PATH, 30).render(f'◀', True, (0, 0, 0))
+                self.surface.blit(text, (20, self.surface.get_height() // 2 - 20))
+        else:
+            text = pygame.font.Font(FONT_PATH, 30).render(f'◀', True, (0, 0, 0))
+            self.surface.blit(text, (20, self.surface.get_height() // 2 - 20))
+            """else:
+                text = pygame.font.Font(FONT_PATH, 30).render(f'◀', True, (0, 0, 0))
+        else:
+            text = pygame.font.Font(FONT_PATH, 30).render(f'◀', True, (0, 0, 0))
+        self.surface.blit(text, (20, self.surface.get_height() // 2 - 20))"""
+        if self.move_to_right:
+            if time.time() - self.move_to_right > 0.1:
+                text = pygame.font.Font(FONT_PATH, 30).render(f'▶', True, (0, 0, 0))
+                self.surface.blit(text, (self.surface.get_width() - 50, self.surface.get_height() // 2 - 20))
+        else:
+            text = pygame.font.Font(FONT_PATH, 30).render(f'▶', True, (0, 0, 0))
+            self.surface.blit(text, (self.surface.get_width() - 50, self.surface.get_height() // 2 - 20))
+            """else:
+                text = pygame.font.Font(FONT_PATH, 30).render(f'▶', True, (0, 0, 0))
+        else:
+            text = pygame.font.Font(FONT_PATH, 30).render(f'▶', True, (0, 0, 0))
+        self.surface.blit(text, (self.surface.get_width() - 50, self.surface.get_height() // 2 - 20))"""
 
     def draw(self):
 
@@ -200,8 +262,11 @@ class Keyboard:
         else:
             self.draw_keyboard()
         
+        self.draw_camera_status()
+        self.draw_triangle_gaze()
+
         if self.add_template_time is not None and time.time() - self.add_template_time < 3:
-            self.draw_text(('追加しました。再起動して反映します。', (self.surface.get_width() // 2, self.surface.get_height() // 8), 20))
+            self.draw_text(('追加しました。再起動して反映します。', (self.surface.get_width() // 2, self.surface.get_height() // 8), 30))
         
         pygame.display.update()
     
@@ -212,20 +277,11 @@ class Keyboard:
         while not self.queue.empty():
             g, enqueued_at = self.queue.get()
             now = time.time()
-            print(f'received gestures enqueued at: {datetime.fromtimestamp(enqueued_at)}, now: {datetime.fromtimestamp(now)}')
+            # print(f'received gestures enqueued at: {datetime.fromtimestamp(enqueued_at)}, now: {datetime.fromtimestamp(now)}')
             if now - enqueued_at <= 0.3:
                 gestures = g
+                # print(f'update gestures: {gestures}')
                 break
-
-        if gestures is not None:
-            pass
-            # イベントがあったらキーボードの状態を更新する
-            """gestures = Gestures(
-                eye_direction = EyeDirection.CENTER,
-                left_eye_state = EyeState.OPEN,
-                right_eye_state = EyeState.OPEN,
-                mouth_state = MouthState.CLOSE,
-            )"""
             
         kind = self.keyboard_state_controller.kind
         keymap = KEYMAP[kind]['children'][self.keyboard_state_controller.current_parent_char]

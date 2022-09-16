@@ -1,23 +1,29 @@
 import time
+import csv
+import copy
+import numpy as np
+from math import hypot
+
 from sound_keyboard.queue import get_queue
-from sound_keyboard.face_gesture_detector.face_detection import inference
-from sound_keyboard.face_gesture_detector.eye_blink_detection import get_eye_state
+# from sound_keyboard.face_gesture_detector.face_detection import inference
+# from sound_keyboard.face_gesture_detector.eye_blink_detection import get_eye_state
 from sound_keyboard.face_gesture_detector.enums import (
     EyeDirection,
     EyeState,
     MouthState,
     Gestures
 )
-import copy
+
 import cv2
 import dlib
-import numpy as np
-from math import hypot
+
 from sound_keyboard.face_gesture_detector.gaze_tracking import GazeTracking
 
 
 
+
 class FaceGestureDetector:
+
     def __init__(self, queue):
         self.cap = cv2.VideoCapture(0)
         self.queue = queue
@@ -29,6 +35,7 @@ class FaceGestureDetector:
         self.previous = None
 
         self.gaze = GazeTracking()
+
 
     def get_gaze_state(self, x):
         if x <= 0.54:
@@ -197,28 +204,34 @@ class FaceGestureDetector:
             _, frame = self.cap.read()
             self.gaze.refresh(frame)
             frame = self.gaze.annotated_frame()
-            face = inference(frame)
-            start, end = face
-            if start == -1 and end == -1:
-                cv2.imshow('frame', frame)
-                cv2.waitKey(1)
-                continue
+            # face = inference(frame)
+            # start, end = face
+            # if start == -1 and end == -1:
+            #     cv2.imshow('frame', frame)
+            #     cv2.waitKey(1)
+            #     continue
         
-            (left, top), (right, bottom) = start, end
-            if self.debug:
-                cv2.rectangle(frame, start, end, (255, 0, 0), 2)
-            dlib_face = dlib.rectangle(left=left, top=top, right=right, bottom=bottom)
-            landmarks, gray = self.gaze_preprocess(frame, dlib_face)
-            if landmarks == -1 and gray == -1:
-                continue
+            # (left, top), (right, bottom) = start, end
+            # if self.debug:
+            #     cv2.rectangle(frame, start, end, (255, 0, 0), 2)
+            # dlib_face = dlib.rectangle(left=left, top=top, right=right, bottom=bottom)
+            # landmarks, gray = self.gaze_preprocess(frame, dlib_face)
+            # if landmarks == -1 and gray == -1:
+            #     continue
 
             # まばたきの計測
-            left_eye_state, right_eye_state, left_eye_position, right_eye_position = get_eye_state(frame, landmarks)
+            # left_eye_state, right_eye_state, left_eye_position, right_eye_position = get_eye_state(frame, landmarks)
+            if self.gaze.is_blinking():
+                left_eye_state = EyeState.CLOSE
+                right_eye_state = EyeState.CLOSE
+            else:
+                left_eye_state = EyeState.OPEN
+                right_eye_state = EyeState.OPEN
 
 
-            #口の開閉度測定
+                #口の開閉度測定
             mouth_landmarks = [60, 61, 63, 64, 65, 67]
-            mouth_ratio, mouth_region = self.get_mouth_ratio(mouth_landmarks, landmarks)
+            # mouth_ratio, mouth_region = self.get_mouth_ratio(mouth_landmarks, landmarks)
 
             eye_direction = EyeDirection.CENTER
             if self.gaze.is_right():
@@ -227,44 +240,52 @@ class FaceGestureDetector:
                 eye_direction = EyeDirection.LEFT
             else:
                 eye_direction = EyeDirection.CENTER
+
+            if self.gaze.is_mouth_open():
+                mouth_state = MouthState.OPEN
+            else:
+                mouth_state = MouthState.CLOSE
             
-            if self.debug:
-                def draw_eye(position, state):
-                    x, y, x1, y1 = position
-                    cv2.rectangle(frame, (x, y), (x1, y1), (255, 0, 0), 2)
-
-                    text = ""
-                    if state == EyeState.OPEN:
-                        text = "open"
-                    else:
-                        text = "close"
-
-                    cv2.putText(frame, text, (x, y1), cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 0), 5)
+            # if self.debug:
+            #     def draw_eye(position, state):
+            #         x, y, x1, y1 = position
+            #         cv2.rectangle(frame, (x, y), (x1, y1), (255, 0, 0), 2)
+            #
+            #         text = ""
+            #         if state == EyeState.OPEN:
+            #             text = "open"
+            #         else:
+            #             text = "close"
+            #
+            #         cv2.putText(frame, text, (x, y1), cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 0), 5)
                 
-                draw_eye(left_eye_position, left_eye_state)
-                draw_eye(right_eye_position, right_eye_state)
-                cv2.polylines(frame, pts=[mouth_region], isClosed=True, color=(0, 255, 0), thickness=2)
-                cv2.imshow("frame", frame)
-                key = cv2.waitKey(1)
-                if key ==27:
-                    break
+                # draw_eye(left_eye_position, left_eye_state)
+                # draw_eye(right_eye_position, right_eye_state)
+                # cv2.polylines(frame, pts=[mouth_region], isClosed=True, color=(0, 255, 0), thickness=2)
+                # cv2.imshow("frame", frame)
+                # key = cv2.waitKey(1)
+                # if key ==27:
+                #     break
 
             if self.queue.full():
+                print("queue is full")
                 self.queue.queue.clear()
 
             gestures = Gestures(
                 eye_direction=eye_direction,
                 left_eye_state=left_eye_state,
                 right_eye_state=right_eye_state,
-                mouth_state=self.get_mouth_state(mouth_ratio),
+                mouth_state=mouth_state,
             )
+            #print(gestures)
+            #print(gestures.eye_direction)
+            """if (gestures.eye_direction != EyeDirection.CENTER or
+                ((self.previous == None or self.previous.left_eye_state == EyeState.OPEN) and gestures.left_eye_state == EyeState.CLOSE) or
+                ((self.previous == None or self.previous.mouth_state == MouthState.CLOSE) and gestures.mouth_state == MouthState.OPEN)
+            ):"""
+            self.queue.put((gestures, time.time()))
+            # print(gestures)
 
-            if (
-                    gestures.eye_direction != EyeDirection.CENTER or
-                    gestures.left_eye_state != gestures.right_eye_state or
-                    ((self.previous == None or self.previous.mouth_state == MouthState.CLOSE) and gestures.mouth_state == MouthState.OPEN)
-                ):
-                self.queue.put((gestures, time.time()))
 
             self.previous = copy.deepcopy(gestures)
 

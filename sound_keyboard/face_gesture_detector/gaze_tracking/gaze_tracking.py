@@ -3,7 +3,23 @@ import os
 import cv2
 import dlib
 from .eye import Eye
+from .mouth import Mouth
 from .calibration import Calibration
+
+import csv
+
+
+def get_threshhold():
+    csv_path = "./gaze_threshold.csv"
+    csv_file = open(csv_path, "r")
+    f = csv.reader(csv_file, delimiter=",", doublequote=True, lineterminator="\r\n", quotechar='"',
+                   skipinitialspace=True)
+    for row in f:
+        a = row
+    return [float(a[0]), float(a[1]), float(a[2]) + 0.15, float(a[3]) + 0.15]
+
+
+right_gaze_threshold, left_gaze_threshold, blinking_threshold, mouth_threshold = get_threshhold()
 
 
 class GazeTracking(object):
@@ -17,6 +33,7 @@ class GazeTracking(object):
         self.frame = None
         self.eye_left = None
         self.eye_right = None
+        self.mouth = None
         self.calibration = Calibration()
 
         # _face_detector is used to detect faces
@@ -24,7 +41,7 @@ class GazeTracking(object):
 
         # _predictor is used to get facial landmarks of a given face
         cwd = os.path.abspath(os.path.dirname(__file__))
-        model_path = os.path.abspath(os.path.join(cwd, "./trained_models/shape_predictor_68_face_landmarks.dat"))
+        model_path = os.path.abspath(os.path.join(cwd, "trained_models/shape_predictor_68_face_landmarks.dat"))
         self._predictor = dlib.shape_predictor(model_path)
 
     @property
@@ -35,6 +52,15 @@ class GazeTracking(object):
             int(self.eye_left.pupil.y)
             int(self.eye_right.pupil.x)
             int(self.eye_right.pupil.y)
+            return True
+        except Exception:
+            return False
+
+    @property
+    def mouth_located(self):
+        try:
+            int(self.mouth.width)
+            int(self.mouth.height)
             return True
         except Exception:
             return False
@@ -52,6 +78,12 @@ class GazeTracking(object):
         except IndexError:
             self.eye_left = None
             self.eye_right = None
+
+        try:
+            landmarks = self._predictor(frame, faces[0])
+            self.mouth = Mouth(landmarks)
+        except:
+            self.mouth = None
 
     def refresh(self, frame):
         """Refreshes the frame and analyzes it.
@@ -95,7 +127,7 @@ class GazeTracking(object):
             pupil_left = self.eye_left.pupil.y / (self.eye_left.center[1] * 2 - 10)
             pupil_right = self.eye_right.pupil.y / (self.eye_right.center[1] * 2 - 10)
             return (pupil_left + pupil_right) / 2
-    
+
     def blinking_ratio(self):
         if self.pupils_located:
             return (self.eye_left.blinking + self.eye_right.blinking) / 2
@@ -103,12 +135,12 @@ class GazeTracking(object):
     def is_right(self):
         """Returns true if the user is looking to the right"""
         if self.pupils_located:
-            return self.horizontal_ratio() <= 0.35
+            return self.horizontal_ratio() <= right_gaze_threshold
 
     def is_left(self):
         """Returns true if the user is looking to the left"""
         if self.pupils_located:
-            return self.horizontal_ratio() >= 0.65
+            return self.horizontal_ratio() >= left_gaze_threshold
 
     def is_center(self):
         """Returns true if the user is looking to the center"""
@@ -118,7 +150,17 @@ class GazeTracking(object):
     def is_blinking(self):
         """Returns true if the user closes his eyes"""
         if self.pupils_located:
-            return self.blinking_ratio() > 5.5
+            return self.blinking_ratio() > blinking_threshold
+        else:
+            return "test"
+
+    def lips_ratio(self):
+        if self.mouth_located:
+            return self.mouth.height / self.mouth.width
+
+    def is_mouth_open(self):
+        if self.mouth_located:
+            return self.lips_ratio() > mouth_threshold
 
     def annotated_frame(self):
         """Returns the main frame with pupils highlighted"""
