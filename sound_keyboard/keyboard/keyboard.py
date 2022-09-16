@@ -47,7 +47,7 @@ class Keyboard:
         pygame.display.set_caption('FaceBoard')
 
         # setting initial window size and set window resizable
-        self.surface = pygame.display.set_mode((1000, 800), pygame.RESIZABLE)
+        self.surface = pygame.display.set_mode((1000, 700), pygame.RESIZABLE)
 
         # setting keyboard controller
         self.keyboard_state_controller = KeyboardStateController()
