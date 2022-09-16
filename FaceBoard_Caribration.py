@@ -4,6 +4,7 @@ from sound_keyboard.face_gesture_detector.gaze_tracking import GazeTracking
 import pyautogui as pag
 import pygame
 from sound_keyboard.sound.sound import (read_aloud)
+from sound_keyboard.read_camera_num import read_camera_num
 import time
 import statistics
 
@@ -60,7 +61,7 @@ def main():
     # gazeクラスをたてる
     gaze = GazeTracking()
     # OpenCVで画像を読み込む
-    webcam = cv2.VideoCapture(0)
+    webcam = cv2.VideoCapture(read_camera_num())
     _, opencv_image = webcam.read()
 
     # Pygameを初期化

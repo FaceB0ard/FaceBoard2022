@@ -11,6 +11,8 @@ from sound_keyboard.face_gesture_detector.enums import (
     Gestures
 )
 
+from sound_keyboard.read_camera_num import read_camera_num
+
 import cv2
 import dlib
 
@@ -20,7 +22,7 @@ from sound_keyboard.face_gesture_detector.gaze_tracking import GazeTracking
 class FaceGestureDetector:
 
     def __init__(self, queue):
-        self.cap = cv2.VideoCapture(0)  # ウェブカメラを使用している場合1に
+        self.cap = cv2.VideoCapture(read_camera_num())  # ウェブカメラを使用している場合1に
         self.queue = queue
         self.detector = dlib.get_frontal_face_detector()
         self.predictor = dlib.shape_predictor(
