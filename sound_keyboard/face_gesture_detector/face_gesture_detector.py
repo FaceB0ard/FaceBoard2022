@@ -20,7 +20,7 @@ from sound_keyboard.face_gesture_detector.gaze_tracking import GazeTracking
 class FaceGestureDetector:
 
     def __init__(self, queue):
-        self.cap = cv2.VideoCapture(1)
+        self.cap = cv2.VideoCapture(0)  # ウェブカメラを使用している場合1に
         self.queue = queue
         self.detector = dlib.get_frontal_face_detector()
         self.predictor = dlib.shape_predictor(

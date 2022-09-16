@@ -9,7 +9,7 @@ def main():
 
     with ThreadPoolExecutor() as executor:
         executor.submit(FaceGestureDetector(queue).run())
-        # executor.submit(Keyboard(queue).run())
+        executor.submit(Keyboard(queue).run())
 
 if __name__ == '__main__':
     main()
