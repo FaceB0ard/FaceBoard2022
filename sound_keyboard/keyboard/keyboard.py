@@ -155,8 +155,13 @@ class Keyboard:
                         self.keyboard_state_controller.select()
                         self.detect_eye_status = None
                         return True
-                elif 1.0 <= (self.detect_eye_status[1] - self.detect_eye_status[0]) < 5.0:
+                elif 1.0 <= (self.detect_eye_status[1] - self.detect_eye_status[0]) < 3.0:
                     self.keyboard_state_controller.back()
+                elif 3.0 <= (self.detect_eye_status[1] - self.detect_eye_status[0]):
+                    # 3秒以上なら、しゃべる
+                    if self.keyboard_state_controller.text != "":
+                        read_aloud(self.keyboard_state_controller.text)
+                    self.keyboard_state_controller.clear()
                 else:
                     self.detect_eye_status = None
         
@@ -260,10 +265,10 @@ class Keyboard:
         while not self.queue.empty():
             g, enqueued_at = self.queue.get()
             now = time.time()
-            print(f'received gestures enqueued at: {datetime.fromtimestamp(enqueued_at)}, now: {datetime.fromtimestamp(now)}')
+            #print(f'received gestures enqueued at: {datetime.fromtimestamp(enqueued_at)}, now: {datetime.fromtimestamp(now)}')
             if now - enqueued_at <= 0.3:
                 gestures = g
-                print(f'update gestures: {gestures}')
+                #print(f'update gestures: {gestures}')
                 break
             
         kind = self.keyboard_state_controller.kind
