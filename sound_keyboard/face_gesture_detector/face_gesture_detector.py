@@ -287,7 +287,7 @@ class FaceGestureDetector:
 
             # queueに投げるの分岐させてもいいかも
             self.queue.put((gestures, time.time()))
-            print(gestures)
+            #print(gestures)
 
             if self.debug:
 
