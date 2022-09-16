@@ -3,10 +3,10 @@ Geek-Ten develop repository
 
 ## 環境
 ### Anaconda
-Anaconda環境でインストールを行うには、`package_list.txt`を用います。
+Anaconda環境でインストールを行うには、`Anaconda_FaceBoard_Environment.yaml`を用います。
 
 ```
-conda create --name faceboard --file package_list.txt
+conda env create -f Anaconda_FaceBoard_Environment.yaml
 ```
 
 作成した環境には、`conda activate faceboard`で入ります。
@@ -20,10 +20,10 @@ Windowsの場合は、以下の手順でシステムにインストールしま�
 
 1. [mpg123公式サイト](https://www.mpg123.de/download.shtml)からWindows用バイナリをダウンロードする。
 このとき、システムにあったもの(32bitか64bitか)を選ぶ。
-2. Zipファイルを任意のわかる場所に解答する。(Cドライブ直下やホームディレクトリ(`%HOMEPATH%`)など)
+2. Zipファイルを任意の分かる場所に解凍する。(Cドライブ直下やホームディレクトリ(`%HOMEPATH%`)など)
 3. システム環境変数のPathに上記の解凍後のディレクトリを追加する。
 ターミナルから利用できるよう、指定したフォルダの下に`mpg123.exe`が来るようにします。
-4. システム環境変数に、変数名: `MPG123_MODDIR`、変数値: `<path/to/mpg123_directory/plugins>`のように設定します。
+4. システム環境変数に、変数名: `MPG123_MODDIR`、変数値: `path/to/mpg123_directory/plugins`のように設定します。
 pluginsディレクトリを変数値に設定します。
 
 
@@ -32,7 +32,8 @@ pluginsディレクトリを変数値に設定します。
 # キーボードの実行
 
 ```
-pipenv run faceboard
+python entry.py
 ```
 
-Pipfileにscriptsとして登録されています。他にもショートカットを設定したい場合はここを利用してください。
+# その他
+

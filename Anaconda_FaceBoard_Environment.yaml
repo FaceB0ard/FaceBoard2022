@@ -1,4 +1,4 @@
-name: faceboard_main
+name: faceboard
 channels:
   - conda-forge
   - defaults
