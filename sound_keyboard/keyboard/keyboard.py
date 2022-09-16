@@ -117,17 +117,13 @@ class Keyboard:
         
         for i, text in enumerate(keymap):
             if keymap[i] == keymap[center_index]:
-                # self.draw_text((text, (i*30 + 80, height // 8 - 20), 30))
                 self.draw_text((text, (self.surface.get_width() // 2 - len(keymap) // 2 * 30 + i*30 + 10, height // 8 - 20), 30))
             else:
                 text = pygame.font.Font(FONT_PATH, 20).render(f'{text}', True, (127, 127, 127))
-                # self.surface.blit(text, (i*30 + 70, height // 8 - 30))
                 self.surface.blit(text, (self.surface.get_width() // 2 - len(keymap) // 2 * 30 + i*30, height // 8 - 30))
 
     def updateKeyboardState(self, gestures: Gestures):
-
         # Gesturesオブジェクトの状態を読み出して操作を確定する
-
         if  gestures.eye_direction != EyeDirection.CENTER:
             direction = convert_eye_direction_to_direction(gestures.eye_direction)
             self.keyboard_state_controller.move(direction)
@@ -173,7 +169,6 @@ class Keyboard:
         return False
     
     def draw_child_keyboard(self):
-
         kind = self.keyboard_state_controller.kind
         keymap = KEYMAP[kind]['children'][self.keyboard_state_controller.current_parent_char]
         width = self.surface.get_width()
@@ -191,7 +186,6 @@ class Keyboard:
         self.draw_text((self.keyboard_state_controller.text, (width / 2, height * 7 // 8), 30))
 
         # 描画順を変えてみる
-        # for dir in range(-2, 3):
         for dir in [-2, 2, -1, 1, 0]:
             index = center_index + dir
             cell_size = cell_sizes[abs(dir)]
@@ -234,11 +228,7 @@ class Keyboard:
         else:
             text = pygame.font.Font(FONT_PATH, 30).render(f'◀', True, (0, 0, 0))
             self.surface.blit(text, (20, self.surface.get_height() // 2 - 20))
-            """else:
-                text = pygame.font.Font(FONT_PATH, 30).render(f'◀', True, (0, 0, 0))
-        else:
-            text = pygame.font.Font(FONT_PATH, 30).render(f'◀', True, (0, 0, 0))
-        self.surface.blit(text, (20, self.surface.get_height() // 2 - 20))"""
+
         if self.move_to_right:
             if time.time() - self.move_to_right > 0.1:
                 text = pygame.font.Font(FONT_PATH, 30).render(f'▶', True, (0, 0, 0))
@@ -246,14 +236,8 @@ class Keyboard:
         else:
             text = pygame.font.Font(FONT_PATH, 30).render(f'▶', True, (0, 0, 0))
             self.surface.blit(text, (self.surface.get_width() - 50, self.surface.get_height() // 2 - 20))
-            """else:
-                text = pygame.font.Font(FONT_PATH, 30).render(f'▶', True, (0, 0, 0))
-        else:
-            text = pygame.font.Font(FONT_PATH, 30).render(f'▶', True, (0, 0, 0))
-        self.surface.blit(text, (self.surface.get_width() - 50, self.surface.get_height() // 2 - 20))"""
 
     def draw(self):
-
         # show parent view
         self.surface.fill(BACKGROUND_COLOR)
 
@@ -271,16 +255,15 @@ class Keyboard:
         pygame.display.update()
     
     def update(self):
-
         start_time = time.time()
         gestures: Gestures = None
         while not self.queue.empty():
             g, enqueued_at = self.queue.get()
             now = time.time()
-            # print(f'received gestures enqueued at: {datetime.fromtimestamp(enqueued_at)}, now: {datetime.fromtimestamp(now)}')
+            print(f'received gestures enqueued at: {datetime.fromtimestamp(enqueued_at)}, now: {datetime.fromtimestamp(now)}')
             if now - enqueued_at <= 0.3:
                 gestures = g
-                # print(f'update gestures: {gestures}')
+                print(f'update gestures: {gestures}')
                 break
             
         kind = self.keyboard_state_controller.kind
@@ -319,33 +302,7 @@ class Keyboard:
                     self.keyboard_state_controller.move(Direction.UP)
                 if event.key == pygame.K_DOWN:
                     self.keyboard_state_controller.move(Direction.DOWN)
-            
-        """#TODO(hakomori64) remove it 
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT]:
-            self.keyboard_state_controller.move(Direction.LEFT)
-            # gestures.eye_direction = EyeDirection.LEFT
-        if keys[pygame.K_UP]:
-            self.keyboard_state_controller.move(Direction.UP)
-            # gestures.eye_direction = EyeDirection.UP
-        if keys[pygame.K_RIGHT]:
-            self.keyboard_state_controller.move(Direction.RIGHT)
-            # gestures.eye_direction = EyeDirection.RIGHT
-        if keys[pygame.K_DOWN]:
-            self.keyboard_state_controller.move(Direction.DOWN)
-            # gestures.eye_direction = EyeDirection.DOWN
-        if keys[pygame.K_PAGEDOWN]:
-            self.keyboard_state_controller.select()
-            # gestures.left_eye_state = EyeState.CLOSE
-        if keys[pygame.K_PAGEUP]:
-            self.keyboard_state_controller.back()
-            #gestures.right_eye_state = EyeState.CLOSE
-        if keys[pygame.K_RETURN]:
-            self.keyboard_state_controller.clear()
-            #gestures.mouth_state = MouthState.OPEN
-        if keys[pygame.K_ESCAPE]:
-            pygame.quit()
-            sys.exit()"""
+
         if gestures is None:
             # イベントがなかったら更新処理をしない
             return 
@@ -369,7 +326,6 @@ class Keyboard:
                 self.delay = MAX_DELAY
             else:
                 self.delay = max(self.delay - frame_time, 0)
-
 
 if __name__ == '__main__':
     queue = get_queue()
