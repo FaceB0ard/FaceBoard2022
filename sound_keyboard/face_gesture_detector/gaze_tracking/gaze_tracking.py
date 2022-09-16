@@ -5,18 +5,20 @@ import dlib
 from .eye import Eye
 from .mouth import Mouth
 from .calibration import Calibration
-
 import csv
 
 
 def get_threshhold():
     csv_path = "./gaze_threshold.csv"
-    csv_file = open(csv_path, "r")
-    f = csv.reader(csv_file, delimiter=",", doublequote=True, lineterminator="\r\n", quotechar='"',
-                   skipinitialspace=True)
-    for row in f:
-        a = row
-    return [float(a[0]), float(a[1]), float(a[2]) + 0.15, float(a[3]) + 0.15]
+    try:
+        csv_file = open(csv_path, "r")
+        f = csv.reader(csv_file, delimiter=",", doublequote=True, lineterminator="\r\n", quotechar='"',
+                    skipinitialspace=True)
+        for row in f:
+            a = row
+        return [float(a[0]), float(a[1]), float(a[2]) + 0.15, float(a[3]) + 0.15]
+    except:
+        return [0,0,0,0]
 
 
 right_gaze_threshold, left_gaze_threshold, blinking_threshold, mouth_threshold = get_threshhold()

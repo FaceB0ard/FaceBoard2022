@@ -37,19 +37,10 @@ def convert_opencv_img_to_pygame(opencv_image):
 
 
 def save_to_csv(average_list):
-    # means = []
-    # for data in datas:
-    #     nums = []
-    #     for d in data:
-    #         if d != None:
-    #             nums.append(d)
-    #     print(f'nums:{nums}')
-    #     mean = float(sum(nums) / len(nums))
-    #     means.append(mean)
-    # print('save_to_csv')
     with open(csv_name, 'w', newline="") as f:
         writer = csv.writer(f)
         writer.writerow(average_list)
+    print('save_to_csv')
 
 
 def get_mean(threshold_list, is_ratio):
