@@ -152,7 +152,7 @@ def main():
         # step1(右を見た時の閾値を決定)
         elif step == 2:
             if not start_time: start_time = time.time()
-            text = font.render('正面を見たまま、右の数字を見てください', True, (0, 0, 0))
+            text = font.render('正面を向いたまま、右の数字を見てください', True, (0, 0, 0))
             screen.blit(text, (width // 2 - text.get_width() // 2, height // 2 - text.get_height() // 2))
             text = font.render('Step 1/3', True, (0, 0, 0))
             screen.blit(text, (width // 2 - text.get_width() // 2, height // 2 - text.get_height() // 2 + 50))
@@ -189,7 +189,7 @@ def main():
         # step2(左を見た時の閾値を決定)
         elif step == 4:
             if not start_time: start_time = time.time()
-            text = font.render('正面を見たまま、左の数字を見てください', True, (0, 0, 0))
+            text = font.render('正面を向いたまま、左の数字を見てください', True, (0, 0, 0))
             screen.blit(text, (width // 2 - text.get_width() // 2, height // 2 - text.get_height() // 2))
             text = font.render('Step 2/3', True, (0, 0, 0))
             screen.blit(text, (width // 2 - text.get_width() // 2, height // 2 - text.get_height() // 2 + 50))
@@ -208,7 +208,7 @@ def main():
         # step3(右と閉じるの間の時間)
         elif step == 5:
             if not start_time: start_time = time.time()
-            text = font.render('続いて、目と口を閉じる測定を行います', True, (0, 0, 0))
+            text = font.render('続いて、目と口を閉じる測定を行います。終了時にアナウンスします', True, (0, 0, 0))
             screen.blit(text, (width // 2 - text.get_width() // 2, height // 2 - text.get_height() // 2))
             text = font.render('Step 3/3', True, (0, 0, 0))
             screen.blit(text, (width // 2 - text.get_width() // 2, height // 2 - text.get_height() // 2 + 50))
@@ -249,6 +249,7 @@ def main():
                 text = font.render('Step 3/3', True, (0, 0, 0))
                 screen.blit(text, (width // 2 - text.get_width() // 2, height // 2 - text.get_height() // 2 + 50))
             else:
+                print(mouth_ratio)
                 save_to_csv([get_mean(right_ratio, is_ratio=False), get_mean(left_ratio, is_ratio=False), get_mean(blinkings, is_ratio=True), get_mean(mouth_ratio, is_ratio=True)])
                 return
 
