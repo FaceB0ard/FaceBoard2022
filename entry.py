@@ -8,8 +8,8 @@ def main():
     queue = get_queue()
 
     with ThreadPoolExecutor() as executor:
-        executor.submit(lambda: FaceGestureDetector(queue).run())
-        executor.submit(Keyboard(queue).run())
+        executor.submit(FaceGestureDetector(queue).run())
+        # executor.submit(Keyboard(queue).run())
 
 if __name__ == '__main__':
     main()

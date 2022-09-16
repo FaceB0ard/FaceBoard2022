@@ -20,7 +20,7 @@ from sound_keyboard.face_gesture_detector.gaze_tracking import GazeTracking
 class FaceGestureDetector:
 
     def __init__(self, queue):
-        self.cap = cv2.VideoCapture(0)
+        self.cap = cv2.VideoCapture(1)
         self.queue = queue
         self.detector = dlib.get_frontal_face_detector()
         self.predictor = dlib.shape_predictor(
@@ -220,15 +220,15 @@ class FaceGestureDetector:
 
             if self.debug:
 
-                def draw_eye(frame):
+                def draw_eye(frame, gestures):
                     # direction
                     right_x = landmarks.part(41).x
                     right_y = landmarks.part(41).y
                     left_x = landmarks.part(46).x
                     left_y = landmarks.part(46).y
-                    if eye_direction == EyeDirection.RIGHT:
+                    if gestures.eye_direction == EyeDirection.RIGHT:
                         text = "->"
-                    elif eye_direction == EyeDirection.RIGHT:
+                    elif gestures.eye_direction == EyeDirection.RIGHT:
                         text = "<-"
                     else:
                         text = "o"
@@ -241,9 +241,9 @@ class FaceGestureDetector:
                     right_y = landmarks.part(36).y
                     left_x = landmarks.part(42).x
                     left_y = landmarks.part(42).y
-                    if left_eye_state == EyeState.OPEN:
+                    if gestures.left_eye_state == EyeState.OPEN:
                         text = "OPEN"
-                    elif left_eye_state == EyeState.CLOSE:
+                    elif gestures.left_eye_state == EyeState.CLOSE:
                         text = "CLOSE"
                     else:
                         text = "None"
@@ -251,7 +251,7 @@ class FaceGestureDetector:
                     cv2.putText(frame, text, (right_x - 10, right_y - 20), cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 0), 2)
                     cv2.putText(frame, text, (left_x - 10, left_y - 20), cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 0), 2)
 
-                def draw_mouth(frame):
+                def draw_mouth(frame, gestures):
                     mouth_landmarks = []
                     for n in range(48, 59):
                         x = landmarks.part(n).x
@@ -266,44 +266,12 @@ class FaceGestureDetector:
                     cv2.line(frame, (landmarks.part(59).x, landmarks.part(59).y),
                              (landmarks.part(48).x, landmarks.part(48).y), (0, 255, 0), 1)
 
-                    if mouth_state == MouthState.CLOSE:
+                    if gestures.mouth_state == MouthState.CLOSE:
                         text = "CLOSE"
                     else:
                         text = "OPEN"
                     cv2.putText(frame, text, (landmarks.part(54).x, landmarks.part(54).y), cv2.FONT_HERSHEY_PLAIN, 2,
                                 (255, 0, 0), 2)
-
-                if self.debug:
-
-                    frame_flip = cv2.flip(frame, 1)
-
-                    # メモリ削減のためグレースケールか
-                    gray = cv2.cvtColor(frame_flip, cv2.COLOR_BGR2GRAY)
-
-                    # 画面上の全ての顔検知(四隅の点の座標を取得)
-                    faces = self.detector(gray)
-
-                    # 複数の顔全てに対して
-                    for face in faces:
-                        # 『顔の四隅』を描写する処理
-                        # 四隅の座標取得
-                        x, y = face.left(), face.top()
-                        x1, y1 = face.right(), face.bottom()
-                        # 四角形描写（GUIライブラリにありがちな方法やね）
-                        cv2.rectangle(frame_flip, (x, y), (x1, y1), (0, 0, 255))
-
-                for face in faces:
-                    # 『ランドマーク』を描写する処理
-                    landmarks = self.predictor(gray, face)
-                    draw_eye(frame_flip)
-                    draw_mouth(frame_flip)
-
-                cv2.imshow("debug", frame_flip)
-
-                # エスケープキーでループを抜ける処理
-                key = cv2.waitKey(1)  # キーの入力を()の中msだけ受け取る and ウィンドウがぶつ切りになるのを防ぐ
-                if key == 27:  # 27がエスケープキーに対応
-                    break
 
             if self.queue.full():
                 self.queue.queue.clear()
@@ -318,6 +286,38 @@ class FaceGestureDetector:
             # queueに投げるの分岐させてもいいかも
             self.queue.put((gestures, time.time()))
             print(gestures)
+
+            if self.debug:
+
+                frame_flip = cv2.flip(frame, 1)
+
+                # メモリ削減のためグレースケールか
+                gray = cv2.cvtColor(frame_flip, cv2.COLOR_BGR2GRAY)
+
+                # 画面上の全ての顔検知(四隅の点の座標を取得)
+                faces = self.detector(gray)
+
+                # 複数の顔全てに対して
+                for face in faces:
+                    # 『顔の四隅』を描写する処理
+                    # 四隅の座標取得
+                    x, y = face.left(), face.top()
+                    x1, y1 = face.right(), face.bottom()
+                    # 四角形描写（GUIライブラリにありがちな方法やね）
+                    cv2.rectangle(frame_flip, (x, y), (x1, y1), (0, 0, 255))
+
+            for face in faces:
+                # 『ランドマーク』を描写する処理
+                landmarks = self.predictor(gray, face)
+                draw_eye(frame_flip, gestures)
+                draw_mouth(frame_flip, gestures)
+
+            cv2.imshow("debug", frame_flip)
+
+            # エスケープキーでループを抜ける処理
+            key = cv2.waitKey(1)  # キーの入力を()の中msだけ受け取る and ウィンドウがぶつ切りになるのを防ぐ
+            if key == 27:  # 27がエスケープキーに対応
+                break
 
             self.previous = copy.deepcopy(gestures)
 
