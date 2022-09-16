@@ -156,7 +156,7 @@ class GazeTracking(object):
         if self.pupils_located:
             return self.blinking_ratio() > blinking_threshold
         else:
-            return "test"
+            print("pupils not located")
 
     def lips_ratio(self):
         if self.mouth_located:
