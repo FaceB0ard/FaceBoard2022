@@ -2,21 +2,6 @@
 Geek-Ten develop repository
 
 ## 環境
-### pipenv
-pipenvは
-
-```
-python3 -m pip install pipenv
-```
-
-でインストールできます。
-
-Pipfileにしたがって依存をすべてインストールしたい場合は`pipenv install`、新規にパッケージをインストールしたい場合は`pipenv install <パッケージ名>`で追加してください。
-
-開発環境でのみ使いたいパッケージをインストールしたい場合は`pipenv install --dev <パッケージ名>`でインストール可能です。
-
-作られた環境には`pipenv shell`で入れます。
-
 ### Anaconda
 Anaconda環境でインストールを行うには、`package_list.txt`を用います。
 
