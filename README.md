@@ -36,4 +36,4 @@ python entry.py
 ```
 
 # その他
-
+詳細情報は[Notion](https://honey-transport-7a7.notion.site/FaceBoard-2022-0185dc2042b042689565e6c11101b620)を確認してください。
